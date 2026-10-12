@@ -29,11 +29,13 @@ class StepsTileService : SimpleTileService() {
 
 ## Screenshots
 
-The four tiles of the sample app, Trailmate, a small fitness and weather companion, on a Wear OS emulator (large round, 454 x 454), captured by CI. The tile carousel can't be driven reliably on CI, so the sample has a tile gallery that inflates the exact layouts its tile services send with the Wear OS tiles renderer (`androidx.wear.tiles:tiles-renderer`).
+The four tile layouts of the library, filled with the data of the sample app Trailmate (a small fitness and weather companion) and captured by CI on a Wear OS emulator (large round, 454 x 454).
+
+These are not screenshots of the system tile carousel: CI cannot add tiles to the carousel and capture it reliably. Each screenshot shows a tile layout rendered by the official Wear OS tiles renderer (`androidx.wear.tiles:tiles-renderer`) inside the sample's tile gallery activity, which inflates exactly the layout its tile service sends to the watch.
 
 | ProgressTile | StatsTile | ShortcutsTile | CountdownTile |
 | :---: | :---: | :---: | :---: |
-| <img src="docs/screenshots/tile-progress.png" alt="Steps tile: a card with a mint progress ring around a walking icon, 8,421 of 10k steps, and a Log walk edge button" width="200"> | <img src="docs/screenshots/tile-stats.png" alt="Weather tile: three data cards with 18° Temp, 12 Wind with an up arrow and km/h, 4 UV moderate, and Updated 5 min ago at the bottom" width="200"> | <img src="docs/screenshots/tile-shortcuts.png" alt="Quick start tile: run, ride, walk and yoga icon buttons in two rows of two" width="200"> | <img src="docs/screenshots/tile-countdown.png" alt="Rain in tile: an orange ring, about a third full, around 1h 25m and Light rain at 15:55 at the bottom" width="200"> |
+| <img src="docs/screenshots/tile-progress.png" alt="Steps tile: a card with a mint progress ring around a walking icon, 8,421 of 10k steps, and a Log walk edge button" width="200"> | <img src="docs/screenshots/tile-stats.png" alt="Weather tile: three full-width rows, Temp 18°, Wind with an up arrow 12 km/h, UV 4 moderate, and Updated 5 min ago at the bottom" width="200"> | <img src="docs/screenshots/tile-shortcuts.png" alt="Quick start tile: run, ride, walk and yoga icon buttons in two rows of two" width="200"> | <img src="docs/screenshots/tile-countdown.png" alt="Rain in tile: 1h 25m in the middle, Light rain at 15:55 at the bottom, and an orange ring along the edge of the screen, about a third full" width="200"> |
 
 ## Why
 
@@ -43,9 +45,9 @@ A tile is not a screen: it is a ProtoLayout tree sent to the system, with its im
 
 - **`SimpleTileService`**: implement `suspend fun tileState(request): TileState`. Coroutines run on the main thread and are cancelled with the service; layouts are built with protolayout-material3 in your `TileTheme`; images are collected into resources with a stable version (rebuilt on demand if the process died between the tile and the resources request); a failing `tileState` shows a retry tile instead of a broken one.
 - **`ProgressTile`**: progress towards a goal in a graphic data card: a ring with an optional icon, `8,421`, `of 10k steps`, and an edge button or the percentage at the bottom.
-- **`StatsTile`**: two (small screens) or three (large screens) data cards with value, label and trend arrow, units on large screens, and "Updated 5 min ago" at the bottom.
+- **`StatsTile`**: two (small screens) or three (large screens) full-width rows with the label and trend arrow on the left and the value on the right, units on large screens, and "Updated 5 min ago" at the bottom.
 - **`ShortcutsTile`**: icon buttons in balanced rows (4 shortcuts are 2 + 2, 5 on a large screen are 3 + 2), up to 4 on small and 6 on large screens, the first one highlighted.
-- **`CountdownTile`**: a ring that fills as the moment comes closer around the remaining time. The time counts down live on the watch with ProtoLayout dynamic time expressions (`1h 25m`, `25m`, `<1m`, then your done label), falling back to static text on old renderers.
+- **`CountdownTile`**: the remaining time in the middle and a ring along the edge of the screen that fills as the moment comes closer. The time counts down live on the watch with ProtoLayout dynamic time expressions (`1h 25m`, `25m`, `<1m`, then your done label), falling back to static text on old renderers.
 - **`MessageTile`**: empty, signed out and error states with an optional action.
 - **`TileAction`**: `TileAction.launch<WorkoutActivity>("type" to "run")` opens an activity with string extras; `TileAction.Refresh` asks for a new tile and tells you what was tapped in `request.lastClickId`.
 - **Fresh data**: `RefreshPolicy.everyMinutes(15)`, `hourly()` (top of the hour), `At(time)`, `earliestOf(...)`, and `Countdown.refreshPolicy()` become the tile's freshness interval; `context.requestTileUpdate<StepsTileService>()` updates now.
@@ -227,9 +229,9 @@ ResourceVersion.of(mapOf("image_ic_run" to R.drawable.ic_run))  // "r3f2c..." (s
 | `SimpleTileService` | `TileService` with `suspend tileState()`, automatic resources, freshness and an error state |
 | `TileState` / `TileStateRequest` | What the tile shows and when it refreshes / tile id, screen, last clicked id, time |
 | `ProgressTile(goal, icon, button, onClick)` | Goal progress in a graphic data card with a ring |
-| `StatsTile(stats, button, onClick)` | 2 or 3 data cards with values, labels, trends and units |
+| `StatsTile(stats, button, onClick)` | 2 or 3 rows with labels, trends, values and units |
 | `ShortcutsTile(title, shortcuts, button)` / `TileShortcut` | Icon buttons in balanced rows |
-| `CountdownTile(countdown, live, button, onClick)` | Live countdown inside a progress ring |
+| `CountdownTile(countdown, live, button, onClick)` | Live countdown with a progress ring along the screen edge |
 | `MessageTile(title, message, button)` | Messages and errors |
 | `TileAction` / `TileButton` | Launch an activity with extras or refresh; the edge button |
 | `TileLayout` / `TileScope` / `TileTheme` | Write your own layouts with protolayout-material3 |

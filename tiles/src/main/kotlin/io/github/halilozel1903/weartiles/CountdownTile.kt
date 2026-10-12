@@ -1,5 +1,6 @@
 package io.github.halilozel1903.weartiles
 
+import androidx.wear.protolayout.DimensionBuilders.dp
 import androidx.wear.protolayout.DimensionBuilders.expand
 import androidx.wear.protolayout.LayoutElementBuilders
 import androidx.wear.protolayout.LayoutElementBuilders.LayoutElement
@@ -21,9 +22,9 @@ import io.github.halilozel1903.weartiles.core.Countdown
 import java.time.Instant
 
 /**
- * A countdown to a moment: the title, a ring that fills up as the moment comes closer (when
- * [Countdown.startMillis] is set) around the remaining time, and the subtitle or an edge [button]
- * at the bottom.
+ * A countdown to a moment: the title, the remaining time in the middle, the subtitle or an edge
+ * [button] at the bottom, and a ring along the edge of the screen that fills up as the moment comes
+ * closer (when [Countdown.startMillis] is set).
  *
  * With [live] (the default) the remaining time counts down on the watch by itself, with ProtoLayout
  * dynamic time expressions (`"1h 25m"`, `"25m"`, `"<1m"`, then [Countdown.doneLabel]); renderers older
@@ -59,7 +60,7 @@ public class CountdownTile(
             trackColor = colorScheme.surfaceContainer,
         )
         val tileClick = onClick?.let { scope.clickable(it, "countdown_tile") }
-        primaryLayout(
+        val content = primaryLayout(
             titleSlot = titleSlot(scope, countdown.title),
             mainSlot = {
                 var modifier = LayoutModifier.contentDescription("${countdown.title} $staticText")
@@ -70,17 +71,10 @@ public class CountdownTile(
                     .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
                     .setVerticalAlignment(LayoutElementBuilders.VERTICAL_ALIGN_CENTER)
                     .addContent(
-                        circularProgressIndicator(
-                            staticProgress = countdown.progress(now),
-                            colors = ringColors,
-                            size = expand(),
-                        ),
-                    )
-                    .addContent(
                         text(
                             remaining,
                             modifier = modifier,
-                            typography = Typography.NUMERAL_EXTRA_SMALL,
+                            typography = if (scope.spec.screenClass.isLarge) Typography.NUMERAL_SMALL else Typography.NUMERAL_EXTRA_SMALL,
                             color = colorScheme.onSurface,
                             maxLines = 1,
                         ),
@@ -90,11 +84,43 @@ public class CountdownTile(
             bottomSlot = bottomSlot(scope, button, caption = countdown.subtitle, idPrefix = "countdown"),
             onClick = tileClick,
         )
+        // The ring runs along the edge of the screen, around everything else, so it never touches the
+        // remaining time in the middle. It is open at the bottom (from 7:30 to 4:30 on a clock face),
+        // where the subtitle or the edge button sits. An explicit size keeps it at the edge on every
+        // renderer, including the ones that cannot expand a progress indicator.
+        val widthDp = scope.deviceConfiguration.screenWidthDp
+        val heightDp = scope.deviceConfiguration.screenHeightDp
+        val ringSize = (minOf(widthDp, heightDp) - 2 * RING_EDGE_MARGIN_DP).coerceAtLeast(1f)
+        LayoutElementBuilders.Box.Builder()
+            .setWidth(dp(widthDp.toFloat()))
+            .setHeight(dp(heightDp.toFloat()))
+            .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
+            .setVerticalAlignment(LayoutElementBuilders.VERTICAL_ALIGN_CENTER)
+            .addContent(
+                circularProgressIndicator(
+                    staticProgress = countdown.progress(now),
+                    startAngleDegrees = RING_START_DEGREES,
+                    endAngleDegrees = RING_START_DEGREES + RING_SWEEP_DEGREES,
+                    colors = ringColors,
+                    size = dp(ringSize),
+                ),
+            )
+            .addContent(content)
+            .build()
     }
 
     private companion object {
         /** The widest text the live countdown shows, to reserve its space. */
         const val LONGEST_TEXT = "00h 00m"
+
+        /** Space between the ring and the edge of the screen. */
+        const val RING_EDGE_MARGIN_DP = 3f
+
+        /** The ring starts at 7:30 on a clock face (clockwise from 12 o'clock)... */
+        const val RING_START_DEGREES = 225f
+
+        /** ...and sweeps three quarters of the circle to 4:30, leaving the bottom open. */
+        const val RING_SWEEP_DEGREES = 270f
     }
 }
 
