@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Trailmate</string>
+    <string name="tile_steps">Steps</string>
+    <string name="tile_steps_description">Your steps towards today\'s goal</string>
+    <string name="tile_weather">Weather</string>
+    <string name="tile_weather_description">Temperature, wind and UV right now</string>
+    <string name="tile_quick_start">Quick start</string>
+    <string name="tile_quick_start_description">Start a run, ride, walk or yoga session</string>
+    <string name="tile_rain">Rain</string>
+    <string name="tile_rain_description">Time until the next rain</string>
+</resources>
